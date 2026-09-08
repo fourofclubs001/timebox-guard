@@ -3,6 +3,7 @@ package com.timebox.guard
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.text.Editable
@@ -10,6 +11,7 @@ import android.text.TextWatcher
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Switch
+import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
@@ -22,18 +24,30 @@ class MainActivity : Activity() {
 
     private lateinit var adapter: AppListAdapter
     private lateinit var selected: MutableSet<String>
+    private lateinit var overlayStatus: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val accessibilityButton = findViewById<Button>(R.id.buttonAccessibility)
+        val overlayButton = findViewById<Button>(R.id.buttonOverlay)
+        overlayStatus = findViewById(R.id.textOverlayStatus)
         val unlockSwitch = findViewById<Switch>(R.id.switchUnlockPrompt)
         val searchInput = findViewById<EditText>(R.id.editSearch)
         val list = findViewById<RecyclerView>(R.id.listApps)
 
         accessibilityButton.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        }
+
+        overlayButton.setOnClickListener {
+            startActivity(
+                Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+            )
         }
 
         unlockSwitch.isChecked = Prefs.isUnlockPromptEnabled(this)
@@ -56,6 +70,16 @@ class MainActivity : Activity() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (Settings.canDrawOverlays(this)) {
+            overlayStatus.text = "Granted ✓"
+        } else {
+            overlayStatus.text =
+                "Required so the blocking prompt can appear on top of the guarded app."
+        }
     }
 
     private fun loadApps(): List<AppEntry> {

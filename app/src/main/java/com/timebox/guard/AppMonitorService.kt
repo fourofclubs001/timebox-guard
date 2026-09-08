@@ -8,7 +8,10 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 
 /**
  * Runs for as long as the user has the accessibility service turned on
@@ -22,6 +25,9 @@ import android.view.accessibility.AccessibilityEvent
  *     same prompt at unlock time.
  */
 class AppMonitorService : AccessibilityService() {
+
+    /** Flip to false to silence the on-screen debug toasts. */
+    private val debug = true
 
     private val handler = Handler(Looper.getMainLooper())
     private var currentForegroundPackage: String? = null
@@ -45,7 +51,14 @@ class AppMonitorService : AccessibilityService() {
         info.flags = AccessibilityServiceInfo.DEFAULT
         serviceInfo = info
 
-        registerReceiver(unlockReceiver, IntentFilter(Intent.ACTION_USER_PRESENT))
+        ContextCompat.registerReceiver(
+            this,
+            unlockReceiver,
+            IntentFilter(Intent.ACTION_USER_PRESENT),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        toast("Timebox Guard service connected")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -58,6 +71,8 @@ class AppMonitorService : AccessibilityService() {
         pendingCheckRunnable = null
 
         if (!Prefs.isMonitored(applicationContext, pkg)) return
+
+        toast("Guarded app in front: $pkg")
 
         val endTime = Prefs.getEndTime(applicationContext, pkg)
         val now = System.currentTimeMillis()
@@ -86,11 +101,22 @@ class AppMonitorService : AccessibilityService() {
     }
 
     private fun launchPrompt(targetPackage: String?) {
+        if (!Settings.canDrawOverlays(this)) {
+            toast("Can't show prompt: grant \"Display over other apps\"")
+            return
+        }
         val intent = Intent(this, PromptActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             if (targetPackage != null) putExtra(PromptActivity.EXTRA_TARGET_PACKAGE, targetPackage)
         }
         startActivity(intent)
+    }
+
+    private fun toast(message: String) {
+        if (!debug) return
+        handler.post {
+            Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onInterrupt() {}

@@ -10,6 +10,10 @@
     </queries>
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Lets the accessibility service launch the blocking prompt from the
+         background (Android 10+ blocks background Activity starts otherwise)
+         and show it over whatever guarded app is in the foreground. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:allowBackup="true"
