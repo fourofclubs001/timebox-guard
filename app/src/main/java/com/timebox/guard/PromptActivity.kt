@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.NumberPicker
 import android.widget.TextView
 import android.widget.Toast
 
@@ -23,6 +24,7 @@ class PromptActivity : Activity() {
 
     companion object {
         const val EXTRA_TARGET_PACKAGE = "target_package"
+        private const val MINUTE_STEP = 5
     }
 
     private var targetPackage: String? = null
@@ -34,21 +36,18 @@ class PromptActivity : Activity() {
         targetPackage = intent.getStringExtra(EXTRA_TARGET_PACKAGE)
 
         val title = findViewById<TextView>(R.id.textTitle)
-        val minutesInput = findViewById<EditText>(R.id.editMinutes)
+        val minutesPicker = findViewById<NumberPicker>(R.id.pickerMinutes)
         val reasonInput = findViewById<EditText>(R.id.editReason)
         val startButton = findViewById<Button>(R.id.buttonStart)
         val closeButton = findViewById<Button>(R.id.buttonClose)
 
-        val quickPicks = mapOf(
-            R.id.chip5 to 5, R.id.chip10 to 10, R.id.chip20 to 20,
-            R.id.chip30 to 30, R.id.chip60 to 60
-        )
-        for ((id, minutes) in quickPicks) {
-            findViewById<Button>(id).setOnClickListener {
-                minutesInput.setText(minutes.toString())
-                minutesInput.setSelection(minutesInput.text.length)
-            }
-        }
+        // Scroll wheel of 5, 10, 15 ... 180 minutes; default 15.
+        val minuteOptions = (1..36).map { (it * MINUTE_STEP).toString() }.toTypedArray()
+        minutesPicker.minValue = 0
+        minutesPicker.maxValue = minuteOptions.size - 1
+        minutesPicker.displayedValues = minuteOptions
+        minutesPicker.wrapSelectorWheel = false
+        minutesPicker.value = 2
 
         val appLabel = targetPackage?.let { getAppLabel(it) }
         title.text = if (appLabel != null)
@@ -57,13 +56,9 @@ class PromptActivity : Activity() {
             "Before you continue,\nhow long and why?"
 
         startButton.setOnClickListener {
-            val minutes = minutesInput.text.toString().trim().toIntOrNull()
+            val minutes = (minutesPicker.value + 1) * MINUTE_STEP
             val reason = reasonInput.text.toString().trim()
 
-            if (minutes == null || minutes <= 0) {
-                Toast.makeText(this, "Enter a valid number of minutes", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
             if (reason.isEmpty()) {
                 Toast.makeText(this, "Please enter a reason", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener

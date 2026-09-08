@@ -20,80 +20,24 @@
             android:textStyle="bold"
             android:textColor="#16161A"
             android:gravity="center"
-            android:paddingBottom="28dp"
+            android:paddingBottom="20dp"
             android:text="How long, and why?" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="How many minutes?"
+            android:text="Minutes"
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#16161A"
-            android:paddingBottom="10dp" />
+            android:paddingBottom="4dp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <NumberPicker
+            android:id="@+id/pickerMinutes"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:baselineAligned="false">
-
-            <Button
-                android:id="@+id/chip5"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minWidth="0dp"
-                android:text="5" />
-
-            <Button
-                android:id="@+id/chip10"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minWidth="0dp"
-                android:text="10" />
-
-            <Button
-                android:id="@+id/chip20"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minWidth="0dp"
-                android:text="20" />
-
-            <Button
-                android:id="@+id/chip30"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minWidth="0dp"
-                android:text="30" />
-
-            <Button
-                android:id="@+id/chip60"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:minWidth="0dp"
-                android:text="60" />
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/editMinutes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:inputType="number"
-            android:textColor="#16161A"
-            android:textColorHint="#9A9AA2"
-            android:textSize="18sp"
-            android:hint="or type minutes" />
+            android:layout_gravity="center_horizontal"
+            android:theme="@android:style/Theme.DeviceDefault.Light" />
 
         <TextView
             android:layout_width="match_parent"
@@ -102,8 +46,8 @@
             android:textSize="15sp"
             android:textStyle="bold"
             android:textColor="#16161A"
-            android:paddingTop="22dp"
-            android:paddingBottom="10dp" />
+            android:paddingTop="20dp"
+            android:paddingBottom="8dp" />
 
         <EditText
             android:id="@+id/editReason"
@@ -119,7 +63,7 @@
             android:id="@+id/buttonStart"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="28dp"
             android:text="Start session" />
 
         <Button
