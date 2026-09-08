@@ -1,49 +1,133 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:background="#F5F5F5"
-    android:padding="32dp">
+    android:background="#F4F4F5"
+    android:fillViewport="true">
 
-    <TextView
-        android:id="@+id/textTitle"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textStyle="bold"
+        android:orientation="vertical"
         android:gravity="center"
-        android:paddingBottom="24dp"
-        android:text="How long, and why?" />
+        android:padding="28dp">
 
-    <EditText
-        android:id="@+id/editMinutes"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="number"
-        android:hint="Planned minutes (e.g. 10)" />
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#16161A"
+            android:gravity="center"
+            android:paddingBottom="28dp"
+            android:text="How long, and why?" />
 
-    <EditText
-        android:id="@+id/editReason"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:inputType="text"
-        android:hint="Reason for opening" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="How many minutes?"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#16161A"
+            android:paddingBottom="10dp" />
 
-    <Button
-        android:id="@+id/buttonStart"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="Start session" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:baselineAligned="false">
 
-    <Button
-        android:id="@+id/buttonClose"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="Close app instead" />
+            <Button
+                android:id="@+id/chip5"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="5" />
 
-</LinearLayout>
+            <Button
+                android:id="@+id/chip10"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="10" />
+
+            <Button
+                android:id="@+id/chip20"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="20" />
+
+            <Button
+                android:id="@+id/chip30"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="30" />
+
+            <Button
+                android:id="@+id/chip60"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="60" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/editMinutes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:inputType="number"
+            android:textColor="#16161A"
+            android:textColorHint="#9A9AA2"
+            android:textSize="18sp"
+            android:hint="or type minutes" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Reason"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#16161A"
+            android:paddingTop="22dp"
+            android:paddingBottom="10dp" />
+
+        <EditText
+            android:id="@+id/editReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textCapSentences"
+            android:textColor="#16161A"
+            android:textColorHint="#9A9AA2"
+            android:textSize="18sp"
+            android:hint="Why are you opening this app?" />
+
+        <Button
+            android:id="@+id/buttonStart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Start session" />
+
+        <Button
+            android:id="@+id/buttonClose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Close app instead" />
+
+    </LinearLayout>
+</ScrollView>

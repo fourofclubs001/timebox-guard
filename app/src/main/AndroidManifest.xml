@@ -33,7 +33,8 @@
         <activity
             android:name=".PromptActivity"
             android:exported="false"
-            android:launchMode="singleTask"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
             android:excludeFromRecents="true"
             android:showWhenLocked="true"
             android:turnScreenOn="true"

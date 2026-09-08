@@ -39,6 +39,17 @@ class PromptActivity : Activity() {
         val startButton = findViewById<Button>(R.id.buttonStart)
         val closeButton = findViewById<Button>(R.id.buttonClose)
 
+        val quickPicks = mapOf(
+            R.id.chip5 to 5, R.id.chip10 to 10, R.id.chip20 to 20,
+            R.id.chip30 to 30, R.id.chip60 to 60
+        )
+        for ((id, minutes) in quickPicks) {
+            findViewById<Button>(id).setOnClickListener {
+                minutesInput.setText(minutes.toString())
+                minutesInput.setSelection(minutesInput.text.length)
+            }
+        }
+
         val appLabel = targetPackage?.let { getAppLabel(it) }
         title.text = if (appLabel != null)
             "You're opening $appLabel.\nHow long, and why?"
@@ -61,6 +72,12 @@ class PromptActivity : Activity() {
             targetPackage?.let {
                 val endTime = System.currentTimeMillis() + minutes * 60_000L
                 Prefs.setEndTime(applicationContext, it, endTime)
+                // Bring the guarded app back to the foreground - otherwise
+                // finishing this prompt just drops back into our own task.
+                packageManager.getLaunchIntentForPackage(it)?.let { launch ->
+                    launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(launch)
+                }
             }
             finish()
         }
