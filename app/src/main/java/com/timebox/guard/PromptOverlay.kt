@@ -39,10 +39,11 @@ class PromptOverlay(private val context: Context) {
     /**
      * @param targetPackage the guarded app, or null for the generic
      *   post-unlock prompt.
-     * @param onClosed called after "Close app instead" (the guarded app was
-     *   sent away), so the service can forget any pending timer.
+     * @param onDismiss called once the prompt goes away. [SessionResult.started]
+     *   is true when the user chose "Start session" (a deadline is now set),
+     *   false when they chose "Close app instead".
      */
-    fun show(targetPackage: String?, onClosed: () -> Unit) {
+    fun show(targetPackage: String?, onDismiss: (SessionResult) -> Unit) {
         if (view != null) return
 
         val v = LayoutInflater.from(context).inflate(R.layout.overlay_prompt, null)
@@ -73,17 +74,17 @@ class PromptOverlay(private val context: Context) {
                 return@setOnClickListener
             }
             val minutes = (picker.value + 1) * MINUTE_STEP
-            targetPackage?.let {
-                Prefs.setEndTime(context, it, System.currentTimeMillis() + minutes * 60_000L)
-            }
+            val endTime = System.currentTimeMillis() + minutes * 60_000L
+            targetPackage?.let { Prefs.setEndTime(context, it, endTime) }
             hide()
+            onDismiss(SessionResult(started = true, endTime = endTime))
         }
 
         closeButton.setOnClickListener {
             targetPackage?.let { Prefs.clearEndTime(context, it) }
             hide()
             goHome()
-            onClosed()
+            onDismiss(SessionResult(started = false, endTime = 0L))
         }
 
         // Swallow the back key so the prompt can't just be dismissed.
@@ -129,4 +130,7 @@ class PromptOverlay(private val context: Context) {
     } catch (e: PackageManager.NameNotFoundException) {
         null
     }
+
+    /** Outcome of a prompt the user just dismissed. */
+    data class SessionResult(val started: Boolean, val endTime: Long)
 }
