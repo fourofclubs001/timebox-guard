@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Timebox Guard</string>
+    <string name="accessibility_service_description">Watches which app is open so Timebox Guard can ask for a planned time and reason before you use apps you\'ve chosen to limit.</string>
+</resources>
