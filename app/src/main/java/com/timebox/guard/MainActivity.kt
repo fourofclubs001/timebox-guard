@@ -2,23 +2,25 @@ package com.timebox.guard
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
-import android.widget.ArrayAdapter
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Button
-import android.widget.ListView
+import android.widget.EditText
 import android.widget.Switch
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 /**
  * Setup screen: enable the accessibility service, choose which apps
- * are guarded, and toggle the unlock-time prompt.
+ * are guarded (searchable list with a switch per app), and toggle the
+ * unlock-time prompt.
  */
 class MainActivity : Activity() {
 
-    private lateinit var listView: ListView
-    private lateinit var apps: List<ApplicationInfo>
+    private lateinit var adapter: AppListAdapter
     private lateinit var selected: MutableSet<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,7 +29,8 @@ class MainActivity : Activity() {
 
         val accessibilityButton = findViewById<Button>(R.id.buttonAccessibility)
         val unlockSwitch = findViewById<Switch>(R.id.switchUnlockPrompt)
-        listView = findViewById(R.id.listApps)
+        val searchInput = findViewById<EditText>(R.id.editSearch)
+        val list = findViewById<RecyclerView>(R.id.listApps)
 
         accessibilityButton.setOnClickListener {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
@@ -39,34 +42,27 @@ class MainActivity : Activity() {
         }
 
         selected = Prefs.getSelectedApps(this)
-        loadApps()
+
+        adapter = AppListAdapter(loadApps(), selected) { updated ->
+            Prefs.setSelectedApps(this, updated)
+        }
+        list.layoutManager = LinearLayoutManager(this)
+        list.adapter = adapter
+
+        searchInput.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                adapter.filter(s?.toString() ?: "")
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
     }
 
-    private fun loadApps() {
+    private fun loadApps(): List<AppEntry> {
         val pm = packageManager
-        apps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        return pm.getInstalledApplications(PackageManager.GET_META_DATA)
             .filter { pm.getLaunchIntentForPackage(it.packageName) != null && it.packageName != packageName }
-            .sortedBy { pm.getApplicationLabel(it).toString().lowercase() }
-
-        val labels = apps.map { pm.getApplicationLabel(it).toString() }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_multiple_choice, labels)
-        listView.adapter = adapter
-        listView.choiceMode = ListView.CHOICE_MODE_MULTIPLE
-
-        apps.forEachIndexed { index, appInfo ->
-            if (selected.contains(appInfo.packageName)) {
-                listView.setItemChecked(index, true)
-            }
-        }
-
-        listView.setOnItemClickListener { _, _, position, _ ->
-            val pkg = apps[position].packageName
-            if (listView.isItemChecked(position)) {
-                selected.add(pkg)
-            } else {
-                selected.remove(pkg)
-            }
-            Prefs.setSelectedApps(this, selected)
-        }
+            .map { AppEntry(pm.getApplicationLabel(it).toString(), it.packageName) }
+            .sortedBy { it.label.lowercase() }
     }
 }
