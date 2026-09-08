@@ -10,9 +10,8 @@
     </queries>
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-    <!-- Lets the accessibility service launch the blocking prompt from the
-         background (Android 10+ blocks background Activity starts otherwise)
-         and show it over whatever guarded app is in the foreground. -->
+    <!-- The accessibility service draws the blocking prompt as an overlay
+         window on top of the guarded app. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
@@ -31,17 +30,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".PromptActivity"
-            android:exported="false"
-            android:launchMode="singleInstance"
-            android:taskAffinity=""
-            android:excludeFromRecents="true"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:windowSoftInputMode="adjustResize"
-            android:theme="@android:style/Theme.DeviceDefault.NoActionBar" />
 
         <service
             android:name=".AppMonitorService"

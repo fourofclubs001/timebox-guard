@@ -18,27 +18,32 @@ import androidx.core.content.ContextCompat
  * (Settings > Accessibility > Timebox Guard). It:
  *  1. Watches which app comes to the foreground.
  *  2. If that app is on the guarded list and has no active/valid session,
- *     it launches the blocking prompt.
+ *     it shows the blocking prompt overlay.
  *  3. If it does have an active session, it schedules a check for when
  *     that session's time runs out, and re-blocks then.
  *  4. Also listens for the phone being unlocked, to optionally show the
  *     same prompt at unlock time.
+ *
+ * The prompt is a system overlay window (see [PromptOverlay]) rather than
+ * an Activity: launching an Activity from the background is unreliable on
+ * Android 10+ and produced a flicker loop with the guarded app.
  */
 class AppMonitorService : AccessibilityService() {
 
-    /** Flip to false to silence the on-screen debug toasts. */
-    private val debug = true
+    /** Flip to true to get on-screen debug toasts. */
+    private val debug = false
 
     private val handler = Handler(Looper.getMainLooper())
+    private val overlay by lazy { PromptOverlay(this) }
     private var currentForegroundPackage: String? = null
     private var pendingCheckRunnable: Runnable? = null
 
     private val unlockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_USER_PRESENT) {
-                if (Prefs.isUnlockPromptEnabled(applicationContext)) {
-                    launchPrompt(null)
-                }
+            if (intent.action == Intent.ACTION_USER_PRESENT &&
+                Prefs.isUnlockPromptEnabled(applicationContext)
+            ) {
+                showPrompt(null)
             }
         }
     }
@@ -63,12 +68,15 @@ class AppMonitorService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val pkg = event?.packageName?.toString() ?: return
-        if (pkg == packageName) return // ignore our own prompt/UI showing up
+        if (pkg == packageName) return // our own overlay / setup UI
         if (pkg == currentForegroundPackage) return // no actual app switch
 
         currentForegroundPackage = pkg
         pendingCheckRunnable?.let { handler.removeCallbacks(it) }
         pendingCheckRunnable = null
+
+        // Leaving a guarded app dismisses a prompt that is still up.
+        if (overlay.isShowing) overlay.hide()
 
         if (!Prefs.isMonitored(applicationContext, pkg)) return
 
@@ -78,55 +86,53 @@ class AppMonitorService : AccessibilityService() {
         val now = System.currentTimeMillis()
 
         if (endTime <= 0L || now >= endTime) {
-            // No planned session yet, or the previous one already expired.
             Prefs.clearEndTime(applicationContext, pkg)
-            launchPrompt(pkg)
+            showPrompt(pkg)
         } else {
-            // There's time left on the clock - schedule a re-check for
-            // exactly when it runs out, in case the user is still in
-            // that app at that moment.
-            val delay = endTime - now
+            // Time left on the clock - re-check exactly when it runs out.
             val runnable = Runnable {
-                if (currentForegroundPackage == pkg) {
-                    val stillEnd = Prefs.getEndTime(applicationContext, pkg)
-                    if (System.currentTimeMillis() >= stillEnd) {
-                        Prefs.clearEndTime(applicationContext, pkg)
-                        launchPrompt(pkg)
-                    }
+                if (currentForegroundPackage == pkg &&
+                    System.currentTimeMillis() >= Prefs.getEndTime(applicationContext, pkg)
+                ) {
+                    Prefs.clearEndTime(applicationContext, pkg)
+                    showPrompt(pkg)
                 }
             }
             pendingCheckRunnable = runnable
-            handler.postDelayed(runnable, delay)
+            handler.postDelayed(runnable, endTime - now)
         }
     }
 
-    private fun launchPrompt(targetPackage: String?) {
+    private fun showPrompt(targetPackage: String?) {
         if (!Settings.canDrawOverlays(this)) {
-            toast("Can't show prompt: grant \"Display over other apps\"")
+            toastAlways("Timebox Guard: grant \"Display over other apps\" to block apps")
             return
         }
-        val intent = Intent(this, PromptActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            if (targetPackage != null) putExtra(PromptActivity.EXTRA_TARGET_PACKAGE, targetPackage)
+        if (overlay.isShowing) return
+        overlay.show(targetPackage) {
+            // "Close app instead" was tapped - drop any pending timer.
+            pendingCheckRunnable?.let { handler.removeCallbacks(it) }
+            pendingCheckRunnable = null
         }
-        startActivity(intent)
     }
 
     private fun toast(message: String) {
-        if (!debug) return
-        handler.post {
-            Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
-        }
+        if (debug) toastAlways(message)
+    }
+
+    private fun toastAlways(message: String) {
+        handler.post { Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show() }
     }
 
     override fun onInterrupt() {}
 
     override fun onDestroy() {
         super.onDestroy()
+        overlay.hide()
         try {
             unregisterReceiver(unlockReceiver)
         } catch (e: Exception) {
-            // receiver was already unregistered / never registered - ignore
+            // never registered / already unregistered - ignore
         }
     }
 }
