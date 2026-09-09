@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -30,6 +31,20 @@ import androidx.core.content.ContextCompat
  */
 class AppMonitorService : AccessibilityService() {
 
+    companion object {
+        private const val TAG = "TimeboxGuard"
+
+        /**
+         * How long to wait, after a foreign app appears on top of the prompt,
+         * before actually tearing the prompt down. A guarded app's startup
+         * fires a burst of window transitions (helper activities, the IME,
+         * account pickers...); reacting to each one made the prompt visibly
+         * flicker away and come back. If the guarded app (or the launcher)
+         * returns to the front within this window, the prompt is kept.
+         */
+        private const val OVERLAY_HIDE_DEBOUNCE_MS = 1500L
+    }
+
     /** Flip to true to get on-screen debug toasts. */
     private val debug = false
 
@@ -39,6 +54,8 @@ class AppMonitorService : AccessibilityService() {
     private var pendingCheckRunnable: Runnable? = null
     /** Package the overlay is currently blocking, if any. */
     private var overlayTargetPackage: String? = null
+    /** Pending debounced teardown of the overlay, if any. */
+    private var pendingOverlayHide: Runnable? = null
 
     /** Home / launcher package names, treated as a real foreground app. */
     private val launcherPackages: Set<String> by lazy {
@@ -92,12 +109,18 @@ class AppMonitorService : AccessibilityService() {
 
         // While the overlay is up, the guarded app is still the real
         // foreground app underneath. Ignore its own redraws and any stray
-        // launcher blips so the overlay stays put; only a switch to a
-        // genuinely different app takes it down.
+        // launcher blips so the overlay stays put; only a *sustained* switch
+        // to a genuinely different app takes it down.
         if (overlay.isShowing) {
-            if (pkg == overlayTargetPackage || pkg in launcherPackages) return
-            overlay.hide()
-            overlayTargetPackage = null
+            if (pkg == overlayTargetPackage || pkg in launcherPackages) {
+                // Target app (or launcher) is back on top - abort any
+                // teardown that a transient foreign window queued up.
+                cancelPendingOverlayHide()
+                return
+            }
+            Log.d(TAG, "foreign window over prompt: $pkg (target=$overlayTargetPackage)")
+            scheduleOverlayHide()
+            return
         }
 
         if (pkg == currentForegroundPackage) return // no actual app switch
@@ -126,8 +149,10 @@ class AppMonitorService : AccessibilityService() {
             return
         }
         if (overlay.isShowing) return
+        cancelPendingOverlayHide()
         overlayTargetPackage = targetPackage
         overlay.show(targetPackage) { result ->
+            cancelPendingOverlayHide()
             overlayTargetPackage = null
             if (result.started && targetPackage != null) {
                 // The guarded app is now the foreground app but no window
@@ -161,6 +186,34 @@ class AppMonitorService : AccessibilityService() {
         pendingCheckRunnable = null
     }
 
+    /**
+     * Queue a teardown of the prompt overlay [OVERLAY_HIDE_DEBOUNCE_MS] from
+     * now. Cancelled if the guarded app or the launcher returns to the front
+     * first (see [onAccessibilityEvent]), which is what a guarded app's
+     * bursty startup looks like. Only a foreign app that is *still* on top
+     * when the timer fires actually takes the prompt down.
+     */
+    private fun scheduleOverlayHide() {
+        if (pendingOverlayHide != null) return // timer already running
+        val runnable = Runnable {
+            pendingOverlayHide = null
+            if (overlay.isShowing) {
+                Log.d(TAG, "tearing down prompt: foreign app stayed on top")
+                overlay.hide()
+                overlayTargetPackage = null
+                // Force the next switch back to the guarded app to re-prompt.
+                currentForegroundPackage = null
+            }
+        }
+        pendingOverlayHide = runnable
+        handler.postDelayed(runnable, OVERLAY_HIDE_DEBOUNCE_MS)
+    }
+
+    private fun cancelPendingOverlayHide() {
+        pendingOverlayHide?.let { handler.removeCallbacks(it) }
+        pendingOverlayHide = null
+    }
+
     private fun toast(message: String) {
         if (debug) toastAlways(message)
     }
@@ -173,6 +226,8 @@ class AppMonitorService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        cancelPendingOverlayHide()
+        cancelPendingCheck()
         overlay.hide()
         try {
             unregisterReceiver(unlockReceiver)
