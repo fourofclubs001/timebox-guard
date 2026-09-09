@@ -73,6 +73,11 @@ class AppMonitorService : AccessibilityService() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
+        // Inflate the prompt now, while nothing is waiting on it. Doing it
+        // lazily on the first guarded-app switch is slow enough (the
+        // NumberPicker) that the app shows through before the prompt lands.
+        overlay.prewarm()
+
         toast("Timebox Guard service connected")
     }
 
