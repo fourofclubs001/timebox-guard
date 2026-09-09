@@ -10,9 +10,14 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.NumberPicker
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 
 /**
  * The full-screen blocking prompt, shown as a system overlay window drawn
@@ -48,6 +53,8 @@ class PromptOverlay(private val context: Context) {
 
         val v = LayoutInflater.from(context).inflate(R.layout.overlay_prompt, null)
 
+        val scroll = v.findViewById<ScrollView>(R.id.scrollRoot)
+        val content = v.findViewById<LinearLayout>(R.id.promptContent)
         val title = v.findViewById<TextView>(R.id.textTitle)
         val picker = v.findViewById<NumberPicker>(R.id.pickerMinutes)
         val reasonInput = v.findViewById<EditText>(R.id.editReason)
@@ -87,14 +94,47 @@ class PromptOverlay(private val context: Context) {
             onDismiss(SessionResult(started = false, endTime = 0L))
         }
 
+        // Keep the reason field and the buttons in view once the field is
+        // focused, even if the keyboard-inset callback is delayed.
+        reasonInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+        }
+
         // Swallow the back key so the prompt can't just be dismissed.
         v.isFocusableInTouchMode = true
         v.setOnKeyListener { _, keyCode, _ -> keyCode == KeyEvent.KEYCODE_BACK }
+
+        // The overlay window fills the whole screen, drawing behind the status
+        // and navigation bars, and SOFT_INPUT_ADJUST_RESIZE does not resize a
+        // non-Activity window when the keyboard opens. So we inset the content
+        // past the system bars ourselves and scroll the reason field / buttons
+        // above the keyboard when it appears.
+        val basePadding = intArrayOf(
+            content.paddingLeft, content.paddingTop,
+            content.paddingRight, content.paddingBottom
+        )
+        ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            view.updatePadding(
+                left = basePadding[0] + bars.left,
+                top = basePadding[1] + bars.top,
+                right = basePadding[2] + bars.right,
+                bottom = basePadding[3] + maxOf(bars.bottom, ime.bottom)
+            )
+            if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+                scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
+            }
+            insets
+        }
 
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            // FLAG_LAYOUT_IN_SCREEN keeps the window covering the whole screen
+            // (including behind the system bars) on every API level; the
+            // content is kept clear of those bars by the insets listener above.
             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
             PixelFormat.OPAQUE

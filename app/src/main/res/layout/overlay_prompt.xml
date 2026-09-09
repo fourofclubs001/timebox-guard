@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/scrollRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F4F4F5"
     android:fillViewport="true">
 
     <LinearLayout
+        android:id="@+id/promptContent"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:gravity="center"
+        android:gravity="center_horizontal"
         android:paddingLeft="28dp"
         android:paddingRight="28dp"
-        android:paddingTop="56dp"
-        android:paddingBottom="40dp">
+        android:paddingTop="32dp"
+        android:paddingBottom="32dp">
 
         <TextView
             android:id="@+id/textTitle"
