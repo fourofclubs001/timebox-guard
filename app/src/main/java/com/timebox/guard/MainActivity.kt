@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.text.Editable
+import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
@@ -31,6 +32,7 @@ data class AppEntry(val label: String, val packageName: String)
 class MainActivity : Activity() {
 
     private lateinit var overlayStatus: TextView
+    private lateinit var accessibilityStatus: TextView
     private lateinit var listContainer: LinearLayout
     private lateinit var selected: MutableSet<String>
 
@@ -44,6 +46,7 @@ class MainActivity : Activity() {
         val accessibilityButton = findViewById<Button>(R.id.buttonAccessibility)
         val overlayButton = findViewById<Button>(R.id.buttonOverlay)
         overlayStatus = findViewById(R.id.textOverlayStatus)
+        accessibilityStatus = findViewById(R.id.textAccessibilityStatus)
         val unlockSwitch = findViewById<Switch>(R.id.switchUnlockPrompt)
         val searchInput = findViewById<EditText>(R.id.editSearch)
         listContainer = findViewById(R.id.listContainer)
@@ -85,6 +88,29 @@ class MainActivity : Activity() {
         } else {
             "Required so the blocking prompt can appear on top of the guarded app."
         }
+        accessibilityStatus.text = if (isAccessibilityServiceEnabled()) {
+            "Running ✓"
+        } else {
+            "Not enabled — nothing is being guarded. Tap above and turn Timebox Guard on."
+        }
+    }
+
+    /**
+     * Whether our [AppMonitorService] is currently switched on in system
+     * settings. `enabled_accessibility_services` is a plain readable secure
+     * setting; no special permission needed.
+     */
+    private fun isAccessibilityServiceEnabled(): Boolean {
+        val expected = "$packageName/${AppMonitorService::class.java.name}"
+        val enabled = Settings.Secure.getString(
+            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+        ) ?: return false
+        val splitter = TextUtils.SimpleStringSplitter(':')
+        splitter.setString(enabled)
+        for (entry in splitter) {
+            if (entry.equals(expected, ignoreCase = true)) return true
+        }
+        return false
     }
 
     private fun buildAppRows() {

@@ -26,12 +26,21 @@
             android:text="1. Enable Accessibility Service" />
 
         <TextView
+            android:id="@+id/textAccessibilityStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:text="" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingTop="4dp"
             android:paddingBottom="16dp"
             android:textSize="12sp"
-            android:text="Required so the app can detect when a guarded app is opened. Find Timebox Guard in the list and turn it on." />
+            android:text="Required so the app can detect when a guarded app is opened. Find Timebox Guard in the list and turn it on. Android switches this off every time the app updates — turn it back on after each install." />
 
         <Button
             android:id="@+id/buttonOverlay"
