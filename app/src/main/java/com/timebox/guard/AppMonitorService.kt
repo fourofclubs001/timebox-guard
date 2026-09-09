@@ -46,7 +46,7 @@ class AppMonitorService : AccessibilityService() {
     }
 
     /** Flip to true to get on-screen debug toasts. */
-    private val debug = false
+    private val debug = true
 
     private val handler = Handler(Looper.getMainLooper())
     private val overlay by lazy { PromptOverlay(this) }
@@ -119,6 +119,7 @@ class AppMonitorService : AccessibilityService() {
                 return
             }
             Log.d(TAG, "foreign window over prompt: $pkg (target=$overlayTargetPackage)")
+            toast("foreign over prompt: $pkg")
             scheduleOverlayHide()
             return
         }
@@ -199,6 +200,7 @@ class AppMonitorService : AccessibilityService() {
             pendingOverlayHide = null
             if (overlay.isShowing) {
                 Log.d(TAG, "tearing down prompt: foreign app stayed on top")
+                toast("prompt torn down (foreign app stayed)")
                 overlay.hide()
                 overlayTargetPackage = null
                 // Force the next switch back to the guarded app to re-prompt.
