@@ -31,6 +31,12 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".MetricsActivity"
+            android:exported="false"
+            android:label="Usage metrics"
+            android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
+
         <service
             android:name=".AppMonitorService"
             android:exported="true"

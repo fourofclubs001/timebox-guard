@@ -165,12 +165,14 @@ class PromptOverlay(private val context: Context) {
             val minutes = ((picker?.value ?: DEFAULT_MINUTES_INDEX) + 1) * MINUTE_STEP
             val endTime = System.currentTimeMillis() + minutes * 60_000L
             targetPackage?.let { Prefs.setEndTime(context, it, endTime) }
+            UsageLog.logStart(context, targetPackage, reason, minutes)
             hide()
             onDismiss(SessionResult(started = true, endTime = endTime))
         }
 
         closeButton?.setOnClickListener {
             targetPackage?.let { Prefs.clearEndTime(context, it) }
+            UsageLog.logClose(context, targetPackage)
             hide()
             goHome()
             onDismiss(SessionResult(started = false, endTime = 0L))

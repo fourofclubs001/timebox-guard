@@ -56,6 +56,9 @@ class AppMonitorService : AccessibilityService() {
     private var overlayTargetPackage: String? = null
     /** Pending debounced teardown of the overlay, if any. */
     private var pendingOverlayHide: Runnable? = null
+    /** Guarded app currently being timed in the foreground, and since when. */
+    private var timedPackage: String? = null
+    private var timedSince: Long = 0L
 
     /** Home / launcher package names, treated as a real foreground app. */
     private val launcherPackages: Set<String> by lazy {
@@ -128,6 +131,9 @@ class AppMonitorService : AccessibilityService() {
         currentForegroundPackage = pkg
         cancelPendingCheck()
 
+        // Left the guarded app that was being timed - bank the usage.
+        if (timedPackage != null && timedPackage != pkg) leaveGuarded()
+
         if (!Prefs.isMonitored(applicationContext, pkg)) return
 
         toast("Guarded app in front: $pkg")
@@ -138,7 +144,24 @@ class AppMonitorService : AccessibilityService() {
             showPrompt(pkg)
         } else {
             scheduleExpiryCheck(pkg, endTime)
+            enterGuarded(pkg)
         }
+    }
+
+    /** Start timing [pkg]'s time in the foreground (idempotent per package). */
+    private fun enterGuarded(pkg: String) {
+        if (timedPackage == pkg) return
+        leaveGuarded()
+        timedPackage = pkg
+        timedSince = System.currentTimeMillis()
+    }
+
+    /** Stop timing the current guarded app and record how long it was used. */
+    private fun leaveGuarded() {
+        val pkg = timedPackage ?: return
+        UsageLog.logUsage(applicationContext, pkg, System.currentTimeMillis() - timedSince)
+        timedPackage = null
+        timedSince = 0L
     }
 
     private fun isForegroundApp(pkg: String): Boolean =
@@ -159,6 +182,7 @@ class AppMonitorService : AccessibilityService() {
                 // The guarded app is now the foreground app but no window
                 // event will fire for it, so arm the expiry check here.
                 scheduleExpiryCheck(targetPackage, result.endTime)
+                enterGuarded(targetPackage)
             } else {
                 cancelPendingCheck()
             }
@@ -175,6 +199,7 @@ class AppMonitorService : AccessibilityService() {
                 System.currentTimeMillis() >= Prefs.getEndTime(applicationContext, pkg)
             ) {
                 Prefs.clearEndTime(applicationContext, pkg)
+                leaveGuarded()
                 showPrompt(pkg)
             }
         }
@@ -228,6 +253,7 @@ class AppMonitorService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        leaveGuarded()
         cancelPendingOverlayHide()
         cancelPendingCheck()
         overlay.hide()

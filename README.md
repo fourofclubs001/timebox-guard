@@ -61,7 +61,20 @@ Studio.
   other than accessibility (like this one) need to declare that clearly in
   the Play Console and are reviewed more strictly. Fine for personal use /
   sideloading; worth knowing if you ever plan to publish it.
-- The "reason" text you type isn't stored anywhere long-term right now — it's
-  just required as a friction step before the timer starts. Easy to add a
-  log (e.g. a simple list screen backed by a Room database) if you want a
-  history of why/when you opened each app.
+## Usage metrics
+
+The **View usage metrics** button at the top of the setup screen opens a
+read-only dashboard. Every prompt decision is logged locally by `UsageLog`
+(its own SharedPreferences file, capped, never leaves the device):
+
+- **Focused time in guarded apps** — measured by `AppMonitorService` while a
+  session runs. Approximate: it stops counting when you leave the app and
+  doesn't tick while the screen is off mid-session.
+- **Sessions started** vs. **times you tapped "Close app instead"**, and the
+  **restraint rate** (closes ÷ prompts) — how often the prompt talked you out
+  of it.
+- **Planned vs. actual** time, and average real session length.
+- **By app** breakdown and a list of the **reasons** you typed.
+
+Pick a window (today / 7 / 30 days / all time) with the buttons up top, or
+wipe everything with **Clear all usage data**.

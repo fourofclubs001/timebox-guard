@@ -43,6 +43,10 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        findViewById<Button>(R.id.buttonMetrics).setOnClickListener {
+            startActivity(Intent(this, MetricsActivity::class.java))
+        }
+
         val accessibilityButton = findViewById<Button>(R.id.buttonAccessibility)
         val overlayButton = findViewById<Button>(R.id.buttonOverlay)
         overlayStatus = findViewById(R.id.textOverlayStatus)
