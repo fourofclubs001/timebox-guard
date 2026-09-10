@@ -22,14 +22,17 @@ import java.util.Locale
 data class AppEntry(val label: String, val packageName: String)
 
 /**
- * Setup screen: enable the accessibility service, allow the overlay
+ * Configuration screen: enable the accessibility service, allow the overlay
  * permission, choose which apps are guarded (searchable list with a switch
  * per app), and toggle the unlock-time prompt.
+ *
+ * This is no longer the launcher entry point — [MetricsActivity] is. It's
+ * reached from the "Settings" button there.
  *
  * The whole screen is one ScrollView; the app list is plain inflated rows
  * inside it (no RecyclerView) so dragging anywhere scrolls the page.
  */
-class MainActivity : Activity() {
+class SettingsActivity : Activity() {
 
     private lateinit var overlayStatus: TextView
     private lateinit var accessibilityStatus: TextView
@@ -42,10 +45,6 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        findViewById<Button>(R.id.buttonMetrics).setOnClickListener {
-            startActivity(Intent(this, MetricsActivity::class.java))
-        }
 
         val accessibilityButton = findViewById<Button>(R.id.buttonAccessibility)
         val overlayButton = findViewById<Button>(R.id.buttonOverlay)

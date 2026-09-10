@@ -21,9 +21,9 @@
         android:theme="@android:style/Theme.DeviceDefault.Light">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".MetricsActivity"
             android:exported="true"
-            android:windowSoftInputMode="adjustResize"
+            android:label="@string/app_name"
             android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,9 +32,10 @@
         </activity>
 
         <activity
-            android:name=".MetricsActivity"
+            android:name=".SettingsActivity"
             android:exported="false"
-            android:label="Usage metrics"
+            android:windowSoftInputMode="adjustResize"
+            android:label="Settings"
             android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
 
         <service

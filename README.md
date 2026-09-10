@@ -6,9 +6,11 @@ up. Optionally shows the same prompt whenever you unlock your phone.
 
 ## How it works
 
-- **MainActivity** — setup screen. Turn on the accessibility service, pick
-  which installed apps are "guarded", and optionally enable the unlock
-  prompt.
+- **MetricsActivity** — the launcher / home screen: the usage dashboard
+  (see "Usage metrics" below).
+- **SettingsActivity** — configuration screen, reached from the **Settings**
+  button on the dashboard. Turn on the accessibility service, pick which
+  installed apps are "guarded", and optionally enable the unlock prompt.
 - **AppMonitorService** (an `AccessibilityService`) — runs in the background
   watching which app is in the foreground.
   - When a guarded app comes to the foreground with no active session (or an
@@ -63,9 +65,9 @@ Studio.
   sideloading; worth knowing if you ever plan to publish it.
 ## Usage metrics
 
-The **View usage metrics** button at the top of the setup screen opens a
-read-only dashboard. Every prompt decision is logged locally by `UsageLog`
-(its own SharedPreferences file, capped, never leaves the device):
+Opening the app lands on the dashboard (`MetricsActivity`). Every prompt
+decision is logged locally by `UsageLog` (its own SharedPreferences file,
+capped, never leaves the device) and drawn here:
 
 - **Focused time in guarded apps** — measured by `AppMonitorService` while a
   session runs. Approximate: it stops counting when you leave the app and
@@ -74,7 +76,12 @@ read-only dashboard. Every prompt decision is logged locally by `UsageLog`
   **restraint rate** (closes ÷ prompts) — how often the prompt talked you out
   of it.
 - **Planned vs. actual** time, and average real session length.
-- **By app** breakdown and a list of the **reasons** you typed.
+- A **per-day bar chart** of focused time (last 7 days, or 14 for the
+  longer windows), drawn by the dependency-free `BarChartView`.
+- A **restraint bar** (backed out vs. went ahead) and a **per-app**
+  breakdown with proportional bars.
+- A list of the **reasons** you typed, newest first.
 
 Pick a window (today / 7 / 30 days / all time) with the buttons up top, or
-wipe everything with **Clear all usage data**.
+wipe everything with **Clear all usage data**. **Settings** (top-right) opens
+the configuration screen.
