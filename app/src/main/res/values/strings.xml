@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Timebox Guard</string>
-    <string name="accessibility_service_description">Watches which app is open so Timebox Guard can ask for a planned time and reason before you use apps you\'ve chosen to limit.</string>
+    <string name="accessibility_service_description">Timebox Guard uses this service only to detect which app is in the foreground, so it can show a planned-time-and-reason prompt before you open apps you\'ve chosen to guard and measure how long you spend in them. It reads only the foreground app\'s package name — never screen contents or what you type — and nothing leaves your device.</string>
 </resources>

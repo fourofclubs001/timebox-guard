@@ -3,10 +3,23 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Hourglass, sitting inside the 72dp adaptive-icon safe zone. -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M54,24 a30,30 0 1 0 0.1,0 z M54,32 a22,22 0 1 1 -0.1,0 z" />
+        android:pathData="M35,30 h38 a3,3 0 0 1 0,6 h-38 a3,3 0 0 1 0,-6 z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M52,36 h4 v20 h14 v4 h-18 z" />
+        android:pathData="M35,72 h38 a3,3 0 0 1 0,6 h-38 a3,3 0 0 1 0,-6 z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M37,34 L71,34 L56,53 L52,53 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,55 L56,55 L71,74 L37,74 Z" />
+    <path
+        android:fillColor="#F2C166"
+        android:pathData="M42,37 L66,37 L55.5,50.5 L52.5,50.5 Z" />
+    <path
+        android:fillColor="#F2C166"
+        android:pathData="M53.5,57 L54.5,57 L63,71 L45,71 Z" />
 </vector>

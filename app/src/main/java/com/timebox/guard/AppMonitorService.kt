@@ -46,7 +46,7 @@ class AppMonitorService : AccessibilityService() {
     }
 
     /** Flip to true to get on-screen debug toasts. */
-    private val debug = true
+    private val debug = false
 
     private val handler = Handler(Looper.getMainLooper())
     private val overlay by lazy { PromptOverlay(this) }

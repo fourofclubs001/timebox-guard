@@ -26,6 +26,7 @@ output.json
 # Keystore
 *.jks
 *.keystore
+keystore.properties
 
 # OS / editor cruft
 .DS_Store

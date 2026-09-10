@@ -1,5 +1,15 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
+}
+
+// Release signing config is read from keystore.properties in the project
+// root (gitignored). Without that file the release build still assembles but
+// stays unsigned, so CI / other machines don't choke on the missing keystore.
+val keystorePropsFile = rootProject.file("keystore.properties")
+val keystoreProps = Properties().apply {
+    if (keystorePropsFile.exists()) load(keystorePropsFile.inputStream())
 }
 
 android {
@@ -10,13 +20,37 @@ android {
         applicationId = "com.timebox.guard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
-        versionName = "1.11-debug"
+        versionCode = 13
+        versionName = "1.0"
+    }
+
+    signingConfigs {
+        if (keystoreProps.isNotEmpty()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storePassword = keystoreProps.getProperty("storePassword")
+                keyAlias = keystoreProps.getProperty("keyAlias")
+                keyPassword = keystoreProps.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
+        debug {
+            versionNameSuffix = "-debug"
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            signingConfig = if (keystoreProps.isNotEmpty()) {
+                signingConfigs.getByName("release")
+            } else {
+                null
+            }
         }
     }
 

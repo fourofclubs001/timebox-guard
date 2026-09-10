@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timebox Guard — Privacy Policy</title>
+<style>
+  body { max-width: 44rem; margin: 2rem auto; padding: 0 1rem;
+         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         color: #1a1a1a; background: #fff; }
+  h1 { font-size: 1.6rem; } h2 { font-size: 1.2rem; margin-top: 2rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #ddd; padding: .5rem .6rem; text-align: left; vertical-align: top; }
+  code { background: #f2f2f2; padding: .1rem .3rem; border-radius: 3px; }
+  .updated { color: #666; font-size: .9rem; }
+</style>
+</head>
+<body>
+<h1>Timebox Guard — Privacy Policy</h1>
+<p class="updated">Last updated: 2026-09-09</p>
+
+<p>Timebox Guard is a personal digital-wellbeing app. It is designed so that
+<strong>your data never leaves your device.</strong></p>
+
+<h2>What the app accesses</h2>
+<ul>
+  <li><strong>The package name of the app currently in the foreground</strong>,
+  via Android's Accessibility Service. This is used only to decide whether to
+  show the time-and-reason prompt and to measure how long you spend in apps
+  you have chosen to guard. The app does <strong>not</strong> read screen
+  contents, the text you type, notifications, passwords, or any other
+  on-screen information.</li>
+  <li><strong>The list of apps installed on your device</strong>, so you can
+  choose which ones to guard. This list is shown only on the settings screen
+  and is not stored or transmitted.</li>
+  <li><strong>The reason text and planned duration you enter</strong> in the
+  prompt, plus a timestamped record of each time you start a session or tap
+  "Close app instead." This is what the Usage Metrics screen displays.</li>
+</ul>
+
+<h2>Where the data goes</h2>
+<p>Nowhere. All of the above is kept in the app's private local storage
+(Android <code>SharedPreferences</code>) on your device. Specifically:</p>
+<ul>
+  <li>There is <strong>no account, no login, and no server.</strong> The app
+  has no code that makes network requests.</li>
+  <li><strong>No analytics, advertising, crash-reporting or tracking
+  SDKs</strong> are included.</li>
+  <li>Nothing is shared with the developer or any third party.</li>
+  <li>Automatic cloud backup is disabled (<code>allowBackup="false"</code>),
+  so the usage log is not copied to Google Drive.</li>
+</ul>
+
+<h2>Retention and deletion</h2>
+<ul>
+  <li>The usage log is capped and old entries are discarded automatically.</li>
+  <li>You can erase all logged data at any time with <strong>Clear all usage
+  data</strong> on the Usage Metrics screen.</li>
+  <li>Uninstalling the app deletes all of its data.</li>
+</ul>
+
+<h2>Permissions</h2>
+<table>
+  <tr><th>Permission</th><th>Why</th></tr>
+  <tr><td>Accessibility Service</td><td>Detect which app is in the foreground (see above).</td></tr>
+  <tr><td>Display over other apps (<code>SYSTEM_ALERT_WINDOW</code>)</td><td>Draw the blocking prompt on top of the guarded app.</td></tr>
+  <tr><td>Query installed apps</td><td>Populate the "choose apps to guard" list.</td></tr>
+</table>
+<p>You can revoke the Accessibility Service and the overlay permission at any
+time in Android Settings; the app will simply stop guarding apps.</p>
+
+<h2>Children</h2>
+<p>The app is not directed at children and collects no personal information
+from anyone.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the updated version will be published at the same
+URL with a new "last updated" date.</p>
+
+<h2>Contact</h2>
+<p>Questions about this policy: <strong>&lt;YOUR-CONTACT-EMAIL&gt;</strong></p>
+</body>
+</html>

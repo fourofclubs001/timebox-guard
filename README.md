@@ -20,10 +20,11 @@ up. Optionally shows the same prompt whenever you unlock your phone.
     that app.
   - It also listens for `ACTION_USER_PRESENT` (phone unlocked) and, if you've
     enabled that option, shows the same prompt right after unlock.
-- **PromptActivity** — the full-screen blocking UI: "planned minutes" +
-  "reason" fields, a **Start session** button, and a **Close app instead**
-  button (present from the very first time it's shown, not just after time
-  runs out). The back button is disabled so it can't be swiped away.
+- **PromptOverlay** — the full-screen blocking UI, drawn by the service as a
+  system overlay window: "planned minutes" + "reason" fields, a **Start
+  session** button, and a **Close app instead** button (present from the
+  very first time it's shown, not just after time runs out). The back button
+  is disabled so it can't be swiped away.
 
 Sessions are tracked per package name using an end-timestamp in
 SharedPreferences — no foreground service or notification needed.
@@ -35,9 +36,17 @@ SharedPreferences — no foreground service or notification needed.
    first time.
 3. Run on a device or emulator (minSdk 26 / Android 8.0+).
 
-I generated the source but couldn't compile an APK in this sandbox (no
-access to Android's SDK/Maven servers here), so please build it in Android
-Studio.
+Debug: `./gradlew assembleDebug`. Release (needs `keystore.properties` in
+the project root — see `playstore/`): `./gradlew bundleRelease`.
+
+## Publishing to Google Play
+
+Prep is done — see **`playstore/README.md`** for the full checklist and what
+still needs your input (developer account, hosting the privacy policy,
+screenshots, the accessibility demo video). The accessibility-API use is
+declared, not hidden: there's an in-app prominent-disclosure dialog
+(`SettingsActivity`) and `playstore/accessibility-declaration.md` has the
+Console form answers.
 
 ## First-run setup on the phone
 
@@ -60,9 +69,9 @@ Studio.
   battery. If the prompt stops appearing after a while, add Timebox Guard to
   your phone's battery-optimization allowlist.
 - **Google Play policy**: apps that use the accessibility API for purposes
-  other than accessibility (like this one) need to declare that clearly in
-  the Play Console and are reviewed more strictly. Fine for personal use /
-  sideloading; worth knowing if you ever plan to publish it.
+  other than accessibility (like this one) are reviewed more strictly and
+  must declare the use. That declaration is prepared — see `playstore/`.
+
 ## Usage metrics
 
 Opening the app lands on the dashboard (`MetricsActivity`). Every prompt
