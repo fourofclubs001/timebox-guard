@@ -175,6 +175,16 @@ class PromptOverlay(private val context: Context) {
             UsageLog.logClose(context, targetPackage)
             hide()
             goHome()
+            // Android doesn't let one app kill another app's task (see
+            // README "Known limitations"), so the target can still show up
+            // as a stale card in Recents even though we just left it. Say
+            // so in the moment - otherwise it reads as this button not
+            // having worked.
+            Toast.makeText(
+                context,
+                "Closed. It may still show in your recent apps — that's an Android limit, not a bug.",
+                Toast.LENGTH_LONG
+            ).show()
             onDismiss(SessionResult(started = false, endTime = 0L))
         }
 
