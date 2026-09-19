@@ -162,6 +162,9 @@ class SettingsActivity : Activity() {
             val headerRow = row.findViewById<View>(R.id.rowHeader)
             val guardSwitch = row.findViewById<Switch>(R.id.switchGuard)
             val sectionExcuses = row.findViewById<View>(R.id.sectionExcuses)
+            val rowExcuseToggle = row.findViewById<View>(R.id.rowExcuseToggle)
+            val textExcuseToggleArrow = row.findViewById<TextView>(R.id.textExcuseToggleArrow)
+            val excuseBody = row.findViewById<View>(R.id.excuseBody)
             val restrictSwitch = row.findViewById<Switch>(R.id.switchRestrictReasons)
             val excuseListContainer = row.findViewById<LinearLayout>(R.id.excuseListContainer)
             val rowAddExcuse = row.findViewById<View>(R.id.rowAddExcuse)
@@ -185,6 +188,15 @@ class SettingsActivity : Activity() {
                 }
             }
             renderExcuses()
+
+            // Starts collapsed - a card per guarded app adds up fast, and
+            // most of the time you're not editing its reason list.
+            excuseBody.visibility = View.GONE
+            rowExcuseToggle.setOnClickListener {
+                val expanding = excuseBody.visibility != View.VISIBLE
+                excuseBody.visibility = if (expanding) View.VISIBLE else View.GONE
+                textExcuseToggleArrow.text = if (expanding) "▾" else "▸"
+            }
 
             guardSwitch.isChecked = selected.contains(app.packageName)
             sectionExcuses.visibility = if (guardSwitch.isChecked) View.VISIBLE else View.GONE

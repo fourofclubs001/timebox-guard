@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A bit darker than the (white) Settings background, to set the
+     per-app reason config apart as its own card. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#EAEAEE" />
+    <corners android:radius="10dp" />
+</shape>

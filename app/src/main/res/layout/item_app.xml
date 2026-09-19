@@ -48,77 +48,118 @@
 
     </LinearLayout>
 
-    <!-- Only shown while this app is guarded (switchGuard on). -->
+    <!-- Only shown while this app is guarded (switchGuard on). Its own
+         darker card, with a tap-to-collapse header, so it doesn't have to
+         sit open for every guarded app at once. -->
     <LinearLayout
         android:id="@+id/sectionExcuses"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="gone"
-        android:paddingTop="4dp">
+        android:layout_marginTop="4dp"
+        android:background="@drawable/bg_excuse_section"
+        android:padding="10dp">
 
         <LinearLayout
+            android:id="@+id/rowExcuseToggle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:minHeight="40dp">
+            android:minHeight="32dp">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="13sp"
+                android:textStyle="bold"
                 android:textColor="#444444"
-                android:text="Restrict to a list of reasons" />
+                android:text="Reason settings" />
 
-            <Switch
-                android:id="@+id/switchRestrictReasons"
+            <TextView
+                android:id="@+id/textExcuseToggleArrow"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="#444444"
+                android:text="▸" />
+
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/excuseListContainer"
+            android:id="@+id/excuseBody"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:paddingTop="4dp">
 
-        <!-- Only shown while switchRestrictReasons is on. -->
-        <LinearLayout
-            android:id="@+id/rowAddExcuse"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingTop="4dp"
-            android:visibility="gone">
-
-            <!-- Collapsed state: just this button. Tapping it swaps in
-                 editNewExcuse + buttonConfirmExcuse below. -->
-            <Button
-                android:id="@+id/buttonAddExcuse"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="+ Add reason" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:minHeight="40dp">
 
-            <EditText
-                android:id="@+id/editNewExcuse"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="Add a reason"
-                android:textSize="14sp"
-                android:imeOptions="actionDone"
-                android:inputType="textCapSentences"
-                android:visibility="gone" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:textSize="13sp"
+                    android:textColor="#444444"
+                    android:text="Restrict to a list of reasons" />
 
-            <Button
-                android:id="@+id/buttonConfirmExcuse"
-                android:layout_width="wrap_content"
+                <Switch
+                    android:id="@+id/switchRestrictReasons"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/excuseListContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Add"
-                android:visibility="gone" />
+                android:orientation="vertical" />
+
+            <!-- Only shown while switchRestrictReasons is on. -->
+            <LinearLayout
+                android:id="@+id/rowAddExcuse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:visibility="gone">
+
+                <!-- Collapsed state: just this button. Tapping it swaps in
+                     editNewExcuse + buttonConfirmExcuse below. -->
+                <Button
+                    android:id="@+id/buttonAddExcuse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="+ Add reason" />
+
+                <EditText
+                    android:id="@+id/editNewExcuse"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="Add a reason"
+                    android:textSize="14sp"
+                    android:imeOptions="actionDone"
+                    android:inputType="textCapSentences"
+                    android:visibility="gone" />
+
+                <Button
+                    android:id="@+id/buttonConfirmExcuse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Add"
+                    android:visibility="gone" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
