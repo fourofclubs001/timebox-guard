@@ -94,6 +94,14 @@
             android:paddingTop="4dp"
             android:visibility="gone">
 
+            <!-- Collapsed state: just this button. Tapping it swaps in
+                 editNewExcuse + buttonConfirmExcuse below. -->
+            <Button
+                android:id="@+id/buttonAddExcuse"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+ Add reason" />
+
             <EditText
                 android:id="@+id/editNewExcuse"
                 android:layout_width="0dp"
@@ -102,13 +110,15 @@
                 android:hint="Add a reason"
                 android:textSize="14sp"
                 android:imeOptions="actionDone"
-                android:inputType="textCapSentences" />
+                android:inputType="textCapSentences"
+                android:visibility="gone" />
 
             <Button
-                android:id="@+id/buttonAddExcuse"
+                android:id="@+id/buttonConfirmExcuse"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add" />
+                android:text="Add"
+                android:visibility="gone" />
 
         </LinearLayout>
 

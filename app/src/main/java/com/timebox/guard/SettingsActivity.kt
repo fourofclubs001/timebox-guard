@@ -12,6 +12,8 @@ import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -165,6 +167,7 @@ class SettingsActivity : Activity() {
             val rowAddExcuse = row.findViewById<View>(R.id.rowAddExcuse)
             val editNewExcuse = row.findViewById<EditText>(R.id.editNewExcuse)
             val buttonAddExcuse = row.findViewById<Button>(R.id.buttonAddExcuse)
+            val buttonConfirmExcuse = row.findViewById<Button>(R.id.buttonConfirmExcuse)
 
             val excuses = Prefs.getExcuses(this, app.packageName).toMutableList()
 
@@ -197,22 +200,48 @@ class SettingsActivity : Activity() {
                 Prefs.setSelectedApps(this, selected)
             }
 
+            fun collapseAddExcuseRow() {
+                editNewExcuse.setText("")
+                editNewExcuse.visibility = View.GONE
+                buttonConfirmExcuse.visibility = View.GONE
+                buttonAddExcuse.visibility = View.VISIBLE
+            }
+
             restrictSwitch.setOnCheckedChangeListener { _, isChecked ->
                 Prefs.setExcuseListEnabled(this, app.packageName, isChecked)
+                collapseAddExcuseRow()
                 rowAddExcuse.visibility = if (isChecked) View.VISIBLE else View.GONE
             }
 
+            // Starts collapsed to just the "+ Add reason" button; tapping it
+            // reveals the text field (focused, keyboard up) instead of
+            // showing an empty input box before there's anything to type.
             buttonAddExcuse.setOnClickListener {
+                buttonAddExcuse.visibility = View.GONE
+                editNewExcuse.visibility = View.VISIBLE
+                buttonConfirmExcuse.visibility = View.VISIBLE
+                editNewExcuse.requestFocus()
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(editNewExcuse, InputMethodManager.SHOW_IMPLICIT)
+            }
+
+            val confirmNewExcuse = {
                 val text = editNewExcuse.text?.toString()?.trim().orEmpty()
-                if (text.isEmpty()) return@setOnClickListener
-                if (excuses.any { it.equals(text, ignoreCase = true) }) {
-                    editNewExcuse.setText("")
-                    return@setOnClickListener
+                if (text.isNotEmpty() && excuses.none { it.equals(text, ignoreCase = true) }) {
+                    excuses.add(text)
+                    Prefs.setExcuses(this, app.packageName, excuses)
+                    renderExcuses()
                 }
-                excuses.add(text)
-                Prefs.setExcuses(this, app.packageName, excuses)
-                editNewExcuse.setText("")
-                renderExcuses()
+                collapseAddExcuseRow()
+            }
+            buttonConfirmExcuse.setOnClickListener { confirmNewExcuse() }
+            editNewExcuse.setOnEditorActionListener { _, actionId, _ ->
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    confirmNewExcuse()
+                    true
+                } else {
+                    false
+                }
             }
 
             listContainer.addView(row)
