@@ -8,11 +8,13 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.WindowManager
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.NumberPicker
 import android.widget.ScrollView
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.ViewCompat
@@ -38,6 +40,7 @@ class PromptOverlay(private val context: Context) {
     companion object {
         private const val MINUTE_STEP = 5
         private const val DEFAULT_MINUTES_INDEX = 2 // 15 minutes
+        private const val CHOOSE_REASON_PLACEHOLDER = "Choose a reason…"
     }
 
     private val windowManager =
@@ -62,6 +65,7 @@ class PromptOverlay(private val context: Context) {
     private var title: TextView? = null
     private var picker: NumberPicker? = null
     private var reasonInput: EditText? = null
+    private var reasonSpinner: Spinner? = null
     private var startButton: Button? = null
     private var closeButton: Button? = null
 
@@ -83,6 +87,7 @@ class PromptOverlay(private val context: Context) {
         title = v.findViewById(R.id.textTitle)
         picker = v.findViewById(R.id.pickerMinutes)
         reasonInput = v.findViewById(R.id.editReason)
+        reasonSpinner = v.findViewById(R.id.spinnerReason)
         startButton = v.findViewById(R.id.buttonStart)
         closeButton = v.findViewById(R.id.buttonClose)
 
@@ -150,6 +155,23 @@ class PromptOverlay(private val context: Context) {
         reasonInput?.clearFocus()
         scroll?.scrollTo(0, 0)
 
+        // Apps can restrict "why" to a fixed list the user defined in
+        // Settings, shown as a dropdown instead of free text. Falls back to
+        // free text if the app enabled it but hasn't added any reasons yet.
+        val excuses = targetPackage?.let { Prefs.getExcuses(context, it) } ?: emptyList()
+        val useExcuseList = targetPackage != null &&
+            Prefs.isExcuseListEnabled(context, targetPackage) &&
+            excuses.isNotEmpty()
+
+        if (useExcuseList) {
+            val options = listOf(CHOOSE_REASON_PLACEHOLDER) + excuses
+            reasonSpinner?.adapter =
+                ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, options)
+            reasonSpinner?.setSelection(0)
+        }
+        reasonSpinner?.visibility = if (useExcuseList) View.VISIBLE else View.GONE
+        reasonInput?.visibility = if (useExcuseList) View.GONE else View.VISIBLE
+
         val label = targetPackage?.let { appLabel(it) }
         title?.text = if (label != null)
             "You're opening $label.\nHow long, and why?"
@@ -157,10 +179,20 @@ class PromptOverlay(private val context: Context) {
             "Before you continue,\nhow long and why?"
 
         startButton?.setOnClickListener {
-            val reason = reasonInput?.text?.toString()?.trim().orEmpty()
-            if (reason.isEmpty()) {
-                Toast.makeText(context, "Please enter a reason", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            val reason = if (useExcuseList) {
+                val position = reasonSpinner?.selectedItemPosition ?: 0
+                if (position <= 0) {
+                    Toast.makeText(context, "Please choose a reason", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                reasonSpinner?.selectedItem as? String ?: return@setOnClickListener
+            } else {
+                val typed = reasonInput?.text?.toString()?.trim().orEmpty()
+                if (typed.isEmpty()) {
+                    Toast.makeText(context, "Please enter a reason", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                typed
             }
             val minutes = ((picker?.value ?: DEFAULT_MINUTES_INDEX) + 1) * MINUTE_STEP
             val endTime = System.currentTimeMillis() + minutes * 60_000L

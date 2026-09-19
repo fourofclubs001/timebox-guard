@@ -156,14 +156,65 @@ class SettingsActivity : Activity() {
             val row = inflater.inflate(R.layout.item_app, listContainer, false)
             row.findViewById<TextView>(R.id.textLabel).text = app.label
             row.findViewById<TextView>(R.id.textPackage).text = app.packageName
+
+            val headerRow = row.findViewById<View>(R.id.rowHeader)
             val guardSwitch = row.findViewById<Switch>(R.id.switchGuard)
+            val sectionExcuses = row.findViewById<View>(R.id.sectionExcuses)
+            val restrictSwitch = row.findViewById<Switch>(R.id.switchRestrictReasons)
+            val excuseListContainer = row.findViewById<LinearLayout>(R.id.excuseListContainer)
+            val rowAddExcuse = row.findViewById<View>(R.id.rowAddExcuse)
+            val editNewExcuse = row.findViewById<EditText>(R.id.editNewExcuse)
+            val buttonAddExcuse = row.findViewById<Button>(R.id.buttonAddExcuse)
+
+            val excuses = Prefs.getExcuses(this, app.packageName).toMutableList()
+
+            fun renderExcuses() {
+                excuseListContainer.removeAllViews()
+                for (excuse in excuses) {
+                    val excuseRow = inflater.inflate(R.layout.item_excuse, excuseListContainer, false)
+                    excuseRow.findViewById<TextView>(R.id.textExcuse).text = excuse
+                    excuseRow.findViewById<Button>(R.id.buttonRemoveExcuse).setOnClickListener {
+                        excuses.remove(excuse)
+                        Prefs.setExcuses(this, app.packageName, excuses)
+                        renderExcuses()
+                    }
+                    excuseListContainer.addView(excuseRow)
+                }
+            }
+            renderExcuses()
+
             guardSwitch.isChecked = selected.contains(app.packageName)
-            row.setOnClickListener {
+            sectionExcuses.visibility = if (guardSwitch.isChecked) View.VISIBLE else View.GONE
+
+            restrictSwitch.isChecked = Prefs.isExcuseListEnabled(this, app.packageName)
+            rowAddExcuse.visibility = if (restrictSwitch.isChecked) View.VISIBLE else View.GONE
+
+            headerRow.setOnClickListener {
                 val nowOn = !selected.contains(app.packageName)
                 if (nowOn) selected.add(app.packageName) else selected.remove(app.packageName)
                 guardSwitch.isChecked = nowOn
+                sectionExcuses.visibility = if (nowOn) View.VISIBLE else View.GONE
                 Prefs.setSelectedApps(this, selected)
             }
+
+            restrictSwitch.setOnCheckedChangeListener { _, isChecked ->
+                Prefs.setExcuseListEnabled(this, app.packageName, isChecked)
+                rowAddExcuse.visibility = if (isChecked) View.VISIBLE else View.GONE
+            }
+
+            buttonAddExcuse.setOnClickListener {
+                val text = editNewExcuse.text?.toString()?.trim().orEmpty()
+                if (text.isEmpty()) return@setOnClickListener
+                if (excuses.any { it.equals(text, ignoreCase = true) }) {
+                    editNewExcuse.setText("")
+                    return@setOnClickListener
+                }
+                excuses.add(text)
+                Prefs.setExcuses(this, app.packageName, excuses)
+                editNewExcuse.setText("")
+                renderExcuses()
+            }
+
             listContainer.addView(row)
             rows.add(app to row)
         }

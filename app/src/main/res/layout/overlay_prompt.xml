@@ -64,6 +64,13 @@
             android:textSize="18sp"
             android:hint="Why are you opening this app?" />
 
+        <!-- Shown instead of editReason when the app restricts reasons to a fixed list. -->
+        <Spinner
+            android:id="@+id/spinnerReason"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/buttonStart"
             android:layout_width="match_parent"

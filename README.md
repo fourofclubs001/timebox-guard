@@ -10,7 +10,10 @@ up. Optionally shows the same prompt whenever you unlock your phone.
   (see "Usage metrics" below).
 - **SettingsActivity** — configuration screen, reached from the **Settings**
   button on the dashboard. Turn on the accessibility service, pick which
-  installed apps are "guarded", and optionally enable the unlock prompt.
+  installed apps are "guarded", and optionally enable the unlock prompt. Each
+  guarded app can also **restrict to a list of reasons**: flip that switch
+  and add the reasons you want to allow for that app specifically — its
+  prompt then shows a dropdown of only those instead of free text.
 - **AppMonitorService** (an `AccessibilityService`) — runs in the background
   watching which app is in the foreground.
   - When a guarded app comes to the foreground with no active session (or an
@@ -21,10 +24,13 @@ up. Optionally shows the same prompt whenever you unlock your phone.
   - It also listens for `ACTION_USER_PRESENT` (phone unlocked) and, if you've
     enabled that option, shows the same prompt right after unlock.
 - **PromptOverlay** — the full-screen blocking UI, drawn by the service as a
-  system overlay window: "planned minutes" + "reason" fields, a **Start
+  system overlay window: "planned minutes" + a "reason" field, a **Start
   session** button, and a **Close app instead** button (present from the
   very first time it's shown, not just after time runs out). The back button
-  is disabled so it can't be swiped away.
+  is disabled so it can't be swiped away. The reason field is free text,
+  unless the app has a restricted reason list configured (see
+  SettingsActivity above), in which case it's a dropdown of just those and a
+  choice is required.
 
 Sessions are tracked per package name using an end-timestamp in
 SharedPreferences — no foreground service or notification needed.
