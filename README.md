@@ -42,17 +42,9 @@ SharedPreferences — no foreground service or notification needed.
    first time.
 3. Run on a device or emulator (minSdk 26 / Android 8.0+).
 
-Debug: `./gradlew assembleDebug`. Release (needs `keystore.properties` in
-the project root — see `playstore/`): `./gradlew bundleRelease`.
-
-## Publishing to Google Play
-
-Prep is done — see **`playstore/README.md`** for the full checklist and what
-still needs your input (developer account, hosting the privacy policy,
-screenshots, the accessibility demo video). The accessibility-API use is
-declared, not hidden: there's an in-app prominent-disclosure dialog
-(`SettingsActivity`) and `playstore/accessibility-declaration.md` has the
-Console form answers.
+I generated the source but couldn't compile an APK in this sandbox (no
+access to Android's SDK/Maven servers here), so please build it in Android
+Studio.
 
 ## First-run setup on the phone
 
@@ -75,9 +67,9 @@ Console form answers.
   battery. If the prompt stops appearing after a while, add Timebox Guard to
   your phone's battery-optimization allowlist.
 - **Google Play policy**: apps that use the accessibility API for purposes
-  other than accessibility (like this one) are reviewed more strictly and
-  must declare the use. That declaration is prepared — see `playstore/`.
-
+  other than accessibility (like this one) need to declare that clearly in
+  the Play Console and are reviewed more strictly. Fine for personal use /
+  sideloading; worth knowing if you ever plan to publish it.
 ## Usage metrics
 
 Opening the app lands on the dashboard (`MetricsActivity`). Every prompt

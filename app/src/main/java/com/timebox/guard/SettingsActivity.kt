@@ -1,7 +1,6 @@
 package com.timebox.guard
 
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -58,11 +57,7 @@ class SettingsActivity : Activity() {
         listContainer = findViewById(R.id.listContainer)
 
         accessibilityButton.setOnClickListener {
-            if (isAccessibilityServiceEnabled()) {
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            } else {
-                showAccessibilityDisclosure()
-            }
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         }
 
         overlayButton.setOnClickListener {
@@ -103,35 +98,6 @@ class SettingsActivity : Activity() {
         } else {
             "Not enabled — nothing is being guarded. Tap above and turn Timebox Guard on."
         }
-    }
-
-    /**
-     * Prominent disclosure shown before we send the user to enable the
-     * accessibility service, as required by Google Play's policy on
-     * accessibility-API use. States exactly what is accessed, why, and that
-     * nothing leaves the device, and requires an explicit tap to continue.
-     */
-    private fun showAccessibilityDisclosure() {
-        AlertDialog.Builder(this)
-            .setTitle("Before you enable the service")
-            .setMessage(
-                "Timebox Guard uses Android's Accessibility Service for one thing: " +
-                    "to detect which app you've just opened, so it can show the " +
-                    "time-and-reason prompt for apps you've chosen to guard and " +
-                    "measure how long you spend in them.\n\n" +
-                    "• It reads only the package name of the app in the foreground — " +
-                    "not screen contents, text you type, or passwords.\n" +
-                    "• All of it stays on this device. Nothing is sent anywhere, and " +
-                    "there are no analytics or ads.\n" +
-                    "• You can turn the service off at any time in Android Settings › " +
-                    "Accessibility.\n\n" +
-                    "Tap Continue to open Accessibility settings and turn Timebox Guard on."
-            )
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Continue") { _, _ ->
-                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-            }
-            .show()
     }
 
     /**
