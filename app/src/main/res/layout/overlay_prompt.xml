@@ -64,14 +64,19 @@
             android:textSize="18sp"
             android:hint="Why are you opening this app?" />
 
-        <!-- Shown instead of editReason when the app restricts reasons to a fixed list. -->
-        <Spinner
-            android:id="@+id/spinnerReason"
+        <!-- Shown instead of editReason when the app restricts reasons to a
+             fixed list; PromptOverlay adds one RadioButton per reason. A list
+             in the prompt itself rather than a Spinner: the Spinner's dropdown
+             is a separate popup window, and once it closed the retype field
+             below no longer received keyboard input. -->
+        <RadioGroup
+            android:id="@+id/radioReasons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:visibility="gone" />
 
-        <!-- After choosing from spinnerReason, the reason has to be typed out.
+        <!-- After choosing from radioReasons, the reason has to be typed out.
              The chosen reason sits in gray (textRetypeGhost) behind a
              transparent EditText, so what's typed shows on top and the gray
              shows what's left. Both use identical text settings so they wrap

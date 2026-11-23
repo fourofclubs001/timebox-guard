@@ -3,6 +3,7 @@ package com.timebox.guard
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
@@ -18,15 +19,15 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
+import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.NumberPicker
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.ScrollView
-import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.ViewCompat
@@ -52,7 +53,6 @@ class PromptOverlay(private val context: Context) {
     companion object {
         private const val MINUTE_STEP = 5
         private const val DEFAULT_MINUTES_INDEX = 2 // 15 minutes
-        private const val CHOOSE_REASON_PLACEHOLDER = "Choose a reason…"
         private const val COLOR_TEXT = 0xFF16161A.toInt()
         private const val COLOR_BORDER = 0xFFDCDDE1.toInt()
         private const val COLOR_DANGER = 0xFFC5221F.toInt()
@@ -80,7 +80,8 @@ class PromptOverlay(private val context: Context) {
     private var title: TextView? = null
     private var picker: NumberPicker? = null
     private var reasonInput: EditText? = null
-    private var reasonSpinner: Spinner? = null
+    private var reasonChoices: RadioGroup? = null
+    private var chosenReason: String? = null
     private var retypeBox: FrameLayout? = null
     private var retypeGhost: TextView? = null
     private var retypeInput: EditText? = null
@@ -106,7 +107,7 @@ class PromptOverlay(private val context: Context) {
         title = v.findViewById(R.id.textTitle)
         picker = v.findViewById(R.id.pickerMinutes)
         reasonInput = v.findViewById(R.id.editReason)
-        reasonSpinner = v.findViewById(R.id.spinnerReason)
+        reasonChoices = v.findViewById(R.id.radioReasons)
         retypeBox = v.findViewById(R.id.retypeBox)
         retypeGhost = v.findViewById(R.id.textRetypeGhost)
         retypeInput = v.findViewById(R.id.editRetype)
@@ -126,28 +127,28 @@ class PromptOverlay(private val context: Context) {
         // Keep the reason field and the buttons in view once the field is
         // focused, even if the keyboard-inset callback is delayed.
         reasonInput?.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) scroll?.post { scroll?.fullScroll(View.FOCUS_DOWN) }
+            if (hasFocus) scrollToBottom()
         }
         retypeInput?.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) scroll?.post { scroll?.fullScroll(View.FOCUS_DOWN) }
+            if (hasFocus) scrollToBottom()
         }
 
         // Picking from the list isn't enough: the chosen reason has to be
         // typed out too. Changing the pick starts the typing over.
-        reasonSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val chosen = position > 0
-                retypeInput?.setText("")
-                retypeBox?.visibility = if (chosen) View.VISIBLE else View.GONE
-                retypeHint?.visibility = if (chosen) View.VISIBLE else View.GONE
-                if (chosen) {
-                    renderRetype()
-                    retypeInput?.requestFocus()
-                }
+        reasonChoices?.setOnCheckedChangeListener { group, checkedId ->
+            chosenReason = group.findViewById<RadioButton>(checkedId)?.text?.toString()
+            val chosen = chosenReason != null
+            retypeInput?.setText("")
+            retypeBox?.visibility = if (chosen) View.VISIBLE else View.GONE
+            retypeHint?.visibility = if (chosen) View.VISIBLE else View.GONE
+            if (chosen) {
+                renderRetype()
+                focusRetype()
             }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
+        // The gray guide can wrap past the field's own height; a tap anywhere
+        // on the box should still land in the field.
+        retypeBox?.setOnClickListener { focusRetype() }
         retypeInput?.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -190,7 +191,7 @@ class PromptOverlay(private val context: Context) {
                 bottom = basePadding[3] + maxOf(bars.bottom, ime.bottom)
             )
             if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
-                scroll?.post { scroll?.fullScroll(View.FOCUS_DOWN) }
+                scrollToBottom()
             }
             insets
         }
@@ -221,20 +222,28 @@ class PromptOverlay(private val context: Context) {
         scroll?.scrollTo(0, 0)
 
         // Apps can restrict "why" to a fixed list the user defined in
-        // Settings, shown as a dropdown instead of free text. Falls back to
+        // Settings, shown as a list to pick from instead of free text. Falls back to
         // free text if the app enabled it but hasn't added any reasons yet.
         val excuses = targetPackage?.let { Prefs.getExcuses(context, it) } ?: emptyList()
         val useExcuseList = targetPackage != null &&
             Prefs.isExcuseListEnabled(context, targetPackage) &&
             excuses.isNotEmpty()
 
+        reasonChoices?.clearCheck()
+        reasonChoices?.removeAllViews()
+        chosenReason = null
         if (useExcuseList) {
-            val options = listOf(CHOOSE_REASON_PLACEHOLDER) + excuses
-            reasonSpinner?.adapter =
-                ArrayAdapter(context, android.R.layout.simple_spinner_dropdown_item, options)
-            reasonSpinner?.setSelection(0)
+            excuses.forEach { excuse ->
+                reasonChoices?.addView(RadioButton(context).apply {
+                    id = View.generateViewId()
+                    text = excuse
+                    textSize = 18f
+                    setTextColor(COLOR_TEXT)
+                    buttonTintList = ColorStateList.valueOf(COLOR_TEXT)
+                })
+            }
         }
-        reasonSpinner?.visibility = if (useExcuseList) View.VISIBLE else View.GONE
+        reasonChoices?.visibility = if (useExcuseList) View.VISIBLE else View.GONE
         reasonInput?.visibility = if (useExcuseList) View.GONE else View.VISIBLE
 
         val label = targetPackage?.let { appLabel(it) }
@@ -245,12 +254,11 @@ class PromptOverlay(private val context: Context) {
 
         startButton?.setOnClickListener {
             val reason = if (useExcuseList) {
-                val position = reasonSpinner?.selectedItemPosition ?: 0
-                if (position <= 0) {
+                val chosen = chosenReason
+                if (chosen == null) {
                     Toast.makeText(context, "Please choose a reason", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                val chosen = reasonSpinner?.selectedItem as? String ?: return@setOnClickListener
                 when (renderRetype()) {
                     Retype.Status.COMPLETE -> chosen
                     Retype.Status.MISMATCH -> {
@@ -319,7 +327,7 @@ class PromptOverlay(private val context: Context) {
      * still to type. A mismatch turns the typed text and border red.
      */
     private fun renderRetype(): Retype.Status {
-        val target = reasonSpinner?.selectedItem as? String ?: ""
+        val target = chosenReason.orEmpty()
         val typed = retypeInput?.text?.toString().orEmpty()
         val state = Retype.state(target, typed)
         val ghost = SpannableStringBuilder(typed).apply {
@@ -334,6 +342,30 @@ class PromptOverlay(private val context: Context) {
             if (mismatch) COLOR_DANGER else COLOR_BORDER
         )
         return state.status
+    }
+
+    /** Put the cursor in the retype field and bring up the keyboard for it. */
+    private fun focusRetype() {
+        val input = retypeInput ?: return
+        input.requestFocus()
+        input.setSelection(input.text.length)
+        input.post {
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
+        }
+    }
+
+    /**
+     * Scroll the prompt to its end so the field being typed in and the
+     * buttons sit above the keyboard. Unlike ScrollView.fullScroll this
+     * leaves focus where it is.
+     */
+    private fun scrollToBottom() {
+        scroll?.post {
+            val sv = scroll ?: return@post
+            val child = sv.getChildAt(0) ?: return@post
+            sv.smoothScrollTo(0, child.height - sv.height)
+        }
     }
 
     private fun goHome() {

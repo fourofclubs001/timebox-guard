@@ -13,7 +13,7 @@ up. Optionally shows the same prompt whenever you unlock your phone.
   installed apps are "guarded", and optionally enable the unlock prompt. Each
   guarded app can also **restrict to a list of reasons**: flip that switch
   and add the reasons you want to allow for that app specifically — its
-  prompt then shows a dropdown of only those instead of free text.
+  prompt then lists only those to pick from instead of free text.
 - **AppMonitorService** (an `AccessibilityService`) — runs in the background
   watching which app is in the foreground.
   - When a guarded app comes to the foreground with no active session (or an
@@ -29,7 +29,7 @@ up. Optionally shows the same prompt whenever you unlock your phone.
   very first time it's shown, not just after time runs out). The back button
   is disabled so it can't be swiped away. The reason field is free text,
   unless the app has a restricted reason list configured (see
-  SettingsActivity above), in which case it's a dropdown of just those and a
+  SettingsActivity above), in which case it lists just those to pick from and a
   choice is required. Choosing one isn't enough: you then type it out over a
   gray copy of it (case and outer spaces don't matter, the Paste menu is
   off) before **Start session** works.
