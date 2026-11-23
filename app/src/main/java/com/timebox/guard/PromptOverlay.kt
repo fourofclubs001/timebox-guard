@@ -3,12 +3,24 @@ package com.timebox.guard
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.graphics.PixelFormat
+import android.graphics.drawable.GradientDrawable
+import android.text.Editable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextWatcher
+import android.text.style.ForegroundColorSpan
+import android.view.ActionMode
 import android.view.KeyEvent
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.FrameLayout
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -41,6 +53,9 @@ class PromptOverlay(private val context: Context) {
         private const val MINUTE_STEP = 5
         private const val DEFAULT_MINUTES_INDEX = 2 // 15 minutes
         private const val CHOOSE_REASON_PLACEHOLDER = "Choose a reason…"
+        private const val COLOR_TEXT = 0xFF16161A.toInt()
+        private const val COLOR_BORDER = 0xFFDCDDE1.toInt()
+        private const val COLOR_DANGER = 0xFFC5221F.toInt()
     }
 
     private val windowManager =
@@ -66,6 +81,10 @@ class PromptOverlay(private val context: Context) {
     private var picker: NumberPicker? = null
     private var reasonInput: EditText? = null
     private var reasonSpinner: Spinner? = null
+    private var retypeBox: FrameLayout? = null
+    private var retypeGhost: TextView? = null
+    private var retypeInput: EditText? = null
+    private var retypeHint: TextView? = null
     private var startButton: Button? = null
     private var closeButton: Button? = null
 
@@ -88,6 +107,10 @@ class PromptOverlay(private val context: Context) {
         picker = v.findViewById(R.id.pickerMinutes)
         reasonInput = v.findViewById(R.id.editReason)
         reasonSpinner = v.findViewById(R.id.spinnerReason)
+        retypeBox = v.findViewById(R.id.retypeBox)
+        retypeGhost = v.findViewById(R.id.textRetypeGhost)
+        retypeInput = v.findViewById(R.id.editRetype)
+        retypeHint = v.findViewById(R.id.textRetypeHint)
         startButton = v.findViewById(R.id.buttonStart)
         closeButton = v.findViewById(R.id.buttonClose)
 
@@ -105,6 +128,44 @@ class PromptOverlay(private val context: Context) {
         reasonInput?.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) scroll?.post { scroll?.fullScroll(View.FOCUS_DOWN) }
         }
+        retypeInput?.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) scroll?.post { scroll?.fullScroll(View.FOCUS_DOWN) }
+        }
+
+        // Picking from the list isn't enough: the chosen reason has to be
+        // typed out too. Changing the pick starts the typing over.
+        reasonSpinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val chosen = position > 0
+                retypeInput?.setText("")
+                retypeBox?.visibility = if (chosen) View.VISIBLE else View.GONE
+                retypeHint?.visibility = if (chosen) View.VISIBLE else View.GONE
+                if (chosen) {
+                    renderRetype()
+                    retypeInput?.requestFocus()
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        retypeInput?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) { renderRetype() }
+        })
+        // It has to be typed, not pasted: drop Paste from the text menus.
+        val noPaste = object : ActionMode.Callback {
+            override fun onCreateActionMode(mode: ActionMode?, menu: Menu?) = true
+            override fun onPrepareActionMode(mode: ActionMode?, menu: Menu?): Boolean {
+                menu?.removeItem(android.R.id.paste)
+                menu?.removeItem(android.R.id.pasteAsPlainText)
+                return true
+            }
+            override fun onActionItemClicked(mode: ActionMode?, item: MenuItem?) = false
+            override fun onDestroyActionMode(mode: ActionMode?) {}
+        }
+        retypeInput?.customSelectionActionModeCallback = noPaste
+        retypeInput?.customInsertionActionModeCallback = noPaste
 
         // Swallow the back key so the prompt can't just be dismissed.
         v.isFocusableInTouchMode = true
@@ -153,6 +214,10 @@ class PromptOverlay(private val context: Context) {
         picker?.value = DEFAULT_MINUTES_INDEX
         reasonInput?.setText("")
         reasonInput?.clearFocus()
+        retypeInput?.setText("")
+        retypeInput?.clearFocus()
+        retypeBox?.visibility = View.GONE
+        retypeHint?.visibility = View.GONE
         scroll?.scrollTo(0, 0)
 
         // Apps can restrict "why" to a fixed list the user defined in
@@ -185,7 +250,18 @@ class PromptOverlay(private val context: Context) {
                     Toast.makeText(context, "Please choose a reason", Toast.LENGTH_SHORT).show()
                     return@setOnClickListener
                 }
-                reasonSpinner?.selectedItem as? String ?: return@setOnClickListener
+                val chosen = reasonSpinner?.selectedItem as? String ?: return@setOnClickListener
+                when (renderRetype()) {
+                    Retype.Status.COMPLETE -> chosen
+                    Retype.Status.MISMATCH -> {
+                        Toast.makeText(context, "That doesn't match the reason you chose. Fix the red text.", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                    else -> {
+                        Toast.makeText(context, "Type out the whole reason to continue", Toast.LENGTH_SHORT).show()
+                        return@setOnClickListener
+                    }
+                }
             } else {
                 val typed = reasonInput?.text?.toString()?.trim().orEmpty()
                 if (typed.isEmpty()) {
@@ -235,6 +311,29 @@ class PromptOverlay(private val context: Context) {
         }
         attached = false
         // Keep the inflated view around for the next showing.
+    }
+
+    /**
+     * Redraw the gray guide behind the retype field: an invisible copy of
+     * what's typed (so the rest lines up and wraps after it), then the part
+     * still to type. A mismatch turns the typed text and border red.
+     */
+    private fun renderRetype(): Retype.Status {
+        val target = reasonSpinner?.selectedItem as? String ?: ""
+        val typed = retypeInput?.text?.toString().orEmpty()
+        val state = Retype.state(target, typed)
+        val ghost = SpannableStringBuilder(typed).apply {
+            setSpan(ForegroundColorSpan(Color.TRANSPARENT), 0, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            append(state.remaining)
+        }
+        retypeGhost?.text = ghost
+        val mismatch = state.status == Retype.Status.MISMATCH
+        retypeInput?.setTextColor(if (mismatch) COLOR_DANGER else COLOR_TEXT)
+        (retypeBox?.background?.mutate() as? GradientDrawable)?.setStroke(
+            (context.resources.displayMetrics.density).toInt().coerceAtLeast(1),
+            if (mismatch) COLOR_DANGER else COLOR_BORDER
+        )
+        return state.status
     }
 
     private fun goHome() {

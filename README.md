@@ -30,7 +30,9 @@ up. Optionally shows the same prompt whenever you unlock your phone.
   is disabled so it can't be swiped away. The reason field is free text,
   unless the app has a restricted reason list configured (see
   SettingsActivity above), in which case it's a dropdown of just those and a
-  choice is required.
+  choice is required. Choosing one isn't enough: you then type it out over a
+  gray copy of it (case and outer spaces don't matter, the Paste menu is
+  off) before **Start session** works.
 
 Sessions are tracked per package name using an end-timestamp in
 SharedPreferences — no foreground service or notification needed.

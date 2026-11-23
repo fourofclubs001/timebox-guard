@@ -71,6 +71,55 @@
             android:layout_height="wrap_content"
             android:visibility="gone" />
 
+        <!-- After choosing from spinnerReason, the reason has to be typed out.
+             The chosen reason sits in gray (textRetypeGhost) behind a
+             transparent EditText, so what's typed shows on top and the gray
+             shows what's left. Both use identical text settings so they wrap
+             the same way. -->
+        <FrameLayout
+            android:id="@+id/retypeBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/retype_box"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/textRetypeGhost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:textSize="18sp"
+                android:textColor="#9A9AA2"
+                android:breakStrategy="simple"
+                android:hyphenationFrequency="none"
+                android:importantForAccessibility="no" />
+
+            <EditText
+                android:id="@+id/editRetype"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@null"
+                android:textSize="18sp"
+                android:textColor="#16161A"
+                android:breakStrategy="simple"
+                android:hyphenationFrequency="none"
+                android:inputType="textMultiLine|textNoSuggestions"
+                android:longClickable="false"
+                android:contentDescription="Type the reason you chose" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/textRetypeHint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="6dp"
+            android:textSize="13sp"
+            android:textColor="#5F6368"
+            android:text="Type the reason you chose to continue."
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/buttonStart"
             android:layout_width="match_parent"
