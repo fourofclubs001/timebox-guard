@@ -10,7 +10,7 @@ android {
         applicationId = "com.timebox.guard"
         minSdk = 26
         targetSdk = 36
-        versionCode = 12
+        versionCode = 14
         versionName = "1.11-debug"
     }
 
